@@ -1,0 +1,118 @@
+import java.util.*;
+
+class User {
+    String userId, pin;
+    double balance;
+    List<String> history = new ArrayList<>();
+
+    User(String userId, String pin, double balance) {
+        this.userId = userId;
+        this.pin = pin;
+        this.balance = balance;
+    }
+}
+
+public class SimpleATM {
+    static Scanner sc = new Scanner(System.in);
+    static Map<String, User> users = new HashMap<>();
+    static User currentUser = null;
+
+    public static void main(String[] args) {
+        // Preload some users
+        users.put("aditi", new User("aditi", "1234", 5000));
+        users.put("john", new User("john", "1111", 3000));
+
+        System.out.println("===== Welcome to ATM =====");
+        if (login()) {
+            menu();
+        } else {
+            System.out.println("Login failed. Exiting...");
+        }
+    }
+
+    static boolean login() {
+        System.out.print("Enter User ID: ");
+        String id = sc.next();
+        System.out.print("Enter PIN: ");
+        String pin = sc.next();
+
+        User u = users.get(id);
+        if (u != null && u.pin.equals(pin)) {
+            currentUser = u;
+            System.out.println(" Login Successful! Welcome " + id);
+            return true;
+        }
+        return false;
+    }
+
+    static void menu() {
+        while (true) {
+            System.out.println("\n===== MENU =====");
+            System.out.println("1. Transaction History");
+            System.out.println("2. Withdraw");
+            System.out.println("3. Deposit");
+            System.out.println("4. Transfer");
+            System.out.println("5. Quit");
+            System.out.print("Choose: ");
+
+            int choice = sc.nextInt();
+            switch (choice) {
+                case 1 -> showHistory();
+                case 2 -> withdraw();
+                case 3 -> deposit();
+                case 4 -> transfer();
+                case 5 -> { System.out.println(" Goodbye!"); return; }
+                default -> System.out.println("Invalid choice.");
+            }
+        }
+    }
+
+    static void showHistory() {
+        if (currentUser.history.isEmpty()) {
+            System.out.println("No transactions yet.");
+        } else {
+            currentUser.history.forEach(System.out::println);
+        }
+    }
+
+    static void withdraw() {
+        System.out.print("Enter amount: ");
+        double amt = sc.nextDouble();
+        if (amt <= currentUser.balance) {
+            currentUser.balance -= amt;
+            currentUser.history.add("Withdraw: -" + amt + " | Balance: " + currentUser.balance);
+            System.out.println(" Withdraw successful.");
+        } else {
+            System.out.println("Insufficient funds.");
+        }
+    }
+
+    static void deposit() {
+        System.out.print("Enter amount: ");
+        double amt = sc.nextDouble();
+        currentUser.balance += amt;
+        currentUser.history.add("Deposit: +" + amt + " | Balance: " + currentUser.balance);
+        System.out.println("Deposit successful.");
+    }
+
+    static void transfer() {
+        System.out.print("Enter receiver ID: ");
+        String rid = sc.next();
+        User receiver = users.get(rid);
+        if (receiver == null) {
+            System.out.println("Receiver not found.");
+            return;
+        }
+        System.out.print("Enter amount: ");
+        double amt = sc.nextDouble();
+        if (amt <= currentUser.balance) {
+            currentUser.balance -= amt;
+            receiver.balance += amt;
+            currentUser.history.add("Transfer to " + rid + ": -" + amt + " | Balance: " + currentUser.balance);
+            receiver.history.add("Transfer from " + currentUser.userId + ": +" + amt + " | Balance: " + receiver.balance);
+            System.out.println("Transfer successful.");
+        } else {
+            System.out.println("Insufficient funds.");
+        }
+    }
+}
